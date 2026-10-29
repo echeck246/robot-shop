@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: robot-shop-slo-rules
+  namespace: monitoring
+  labels:
+    release: prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: robot-shop-slo.rules
+      rules:
+        - alert: RobotShopPaymentAvailabilitySLOBreached
+          expr: kube_deployment_status_replicas_available{namespace="robot-shop", deployment="payment"} == 0
+          for: 30s
+          labels:
+            severity: critical
+            service: payment
+            namespace: robot-shop
+          annotations:
+            summary: "Payment Service Availability SLO Breached"
+            description: "The payment service has 0 healthy replicas. Availability SLO is actively burning error budget."
+            runbook_url: "https://github.com/echeck246/robot-shop/blob/master/RUNBOOK.md#payment-service-outage"

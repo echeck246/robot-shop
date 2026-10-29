@@ -31,6 +31,31 @@ alertmanager:
       requests:
         cpu: 20m
         memory: 32Mi
+  config:
+    global:
+      resolve_timeout: 5m
+      slack_api_url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK_URL"
+    route:
+      group_by: ['alertname', 'namespace', 'service']
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 12h
+      receiver: 'slack-notifications'
+      routes:
+        - matchers:
+            - alertname = "RobotShopPaymentAvailabilitySLOBreached"
+          receiver: 'slack-notifications'
+          continue: false
+    receivers:
+      - name: 'slack-notifications'
+        slack_configs:
+          - channel: '#general'
+            send_resolved: true
+            title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.service }})'
+            text: >-
+              *Description:* {{ .CommonAnnotations.description }}
+              *Severity:* {{ .CommonLabels.severity }}
+              *Runbook:* <{{ .CommonAnnotations.runbook_url }}|Open Runbook>
 
 kube-state-metrics:
   resources:
